@@ -1,0 +1,48 @@
+name: CODECOV/CODECOV-action@v5
+on:
+  push:  # Trigger on push—manual sync for third-party
+  workflow_dispatch:  # Manual launch to bypass app limits
+jobs:
+  build:  # Job name: Craft the SpacezZzhell
+    name: 💪 Build Partitioned Harden SpacezZzhell 💪
+    runs-on: ubuntu-latest  # Remote forge to dodge app blocks
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Limited depth for third-party fetch
+          token: ${{ secrets.GITHUB_TOKEN }}  # Auth for external access
+
+      - name: ⚙️ Set Up Node
+        uses: actions/setup-node@v4  # Base environment setup
+
+      - name: 📦 Install Build Tools
+        run: |
+          npm install -g zsh  # Install zsh globally (simulate for now)
+          npm install -g shelljs  # Add scripting power
+        env:
+          NODE_ENV: development  # Dev mode for flexibility
+
+      - name: 🛠️ Initialize Partitioned Harden SpacezZzhell
+        run: |
+          mkdir -p spacezzzhell/{config,scripts,partitions}
+          echo "#!/bin/zsh" > spacezzzhell/scripts/build.zsh
+          echo "echo 'Building Partitioned Harden SpacezZzhell partitions...'" >> spacezzzhell/scripts/build.zsh
+          chmod +x spacezzzhell/scripts/build.zsh
+          echo "PART_COUNT=3" > spacezzzhell/config/env.zsh  # Start with 3 partitions
+        shell: bash  # Use bash for mkdir/chmod compatibility
+
+      - name: 📝 Generate Partition Scripts
+        run: |
+          for i in {1..3}; do
+            echo "partition_$i() { echo 'Partition $i setup'; }; partition_$i" >> spacezzzhell/scripts/build.zsh
+          done
+        shell: bash  # Bash for loop support
+
+      - name: 🎉 Confirm Build Start
+        if: success()
+        run: echo "Partitioned Harden SpacezZzhell build initiated, Code Reaver! Check spacezzzhell/ folder."
+
+      - name: ⚠️ Alert on Failure
+        if: failure()
+        run: echo "Build failed—manual rescue needed, warrior!"
