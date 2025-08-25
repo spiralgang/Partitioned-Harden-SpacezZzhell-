@@ -1,5 +1,5 @@
-/.name: 🔥 Forge SpacezZzhell with Function Calling 🔥
-on:
+name: 🔥 Forge SpacezZzhell with Function Calling 🔥
+on: 
   push:  # Trigger on push—manual sync
   workflow_dispatch:  # Manual launch to bypass app limits
 jobs:
@@ -26,7 +26,7 @@ jobs:
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}  # Secure API key
 
       - name: 🛠️ Initialize Function Calling Setup
-        run: |
+        run: /.github/workflows/xai.yml
           mkdir -p spacezzzhell/functions
           echo "#!/usr/bin/env python3" > spacezzzhell/functions/tool_handler.py
           cat << 'EOF' >> spacezzzhell/functions/tool_handler.py
