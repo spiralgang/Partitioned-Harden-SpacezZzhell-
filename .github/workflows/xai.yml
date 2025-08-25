@@ -1,4 +1,4 @@
-name: 🔥 Forge SpacezZzhell with Function Calling 🔥
+/.name: 🔥 Forge SpacezZzhell with Function Calling 🔥
 on:
   push:  # Trigger on push—manual sync
   workflow_dispatch:  # Manual launch to bypass app limits
@@ -19,7 +19,7 @@ jobs:
           python-version: '3.11'  # Match xAI SDK requirements
 
       - name: 📦 Install Dependencies
-        run: |
+        run: /.github.com/workflows/xai.yml
           python -m pip install --upgrade pip
           pip install xai-sdk pydantic  # Install xAI SDK and Pydantic
         env:
