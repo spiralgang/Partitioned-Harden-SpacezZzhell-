@@ -805,7 +805,7 @@ run_demonstration() {
     echo
     echo "🌟 INTEGRATED WORKFLOW DEMONSTRATION"
     echo "Mermaid Design → SMC FSM → Multi-Language Implementation"
-    echo "=" * 60
+    printf '=%.0s' {1..60}; echo
     echo
     
     # Show Mermaid design
