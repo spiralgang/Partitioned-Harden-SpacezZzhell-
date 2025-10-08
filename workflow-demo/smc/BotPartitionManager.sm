@@ -1,0 +1,189 @@
+// BotPartitionManager.sm - Generated from Mermaid bot partition flow
+%class BotPartitionManager
+%header BotPartitionManager.h
+%start Idle
+%map BotPartitionMap
+%%
+
+Idle {
+    startPartition(device: String)
+        CreatePartition {
+            initializePartition(device);
+            validateDevice();
+        }
+    
+    shutdown()
+        [*] {
+            cleanup();
+        }
+}
+
+CreatePartition {
+    partitionCreated()
+        MountOverlay {
+            setupOverlayFS();
+            configureDirectories();
+        }
+    
+    partitionFailed(error: String)
+        Error {
+            handleError(error);
+            logPartitionFailure();
+        }
+}
+
+MountOverlay {
+    overlayMounted()
+        ConfigurePRoot {
+            setupPRootEnvironment();
+            configureNamespaces();
+        }
+    
+    mountFailed(error: String)
+        Error {
+            handleError(error);
+            cleanupPartialMount();
+        }
+}
+
+ConfigurePRoot {
+    prootConfigured()
+        Ready {
+            notifyReady();
+            registerForWorkorders();
+        }
+    
+    configurationFailed(error: String)
+        Error {
+            handleError(error);
+            cleanupPRoot();
+        }
+}
+
+Ready {
+    deployApplication(app: String)
+        Deploying {
+            startDeployment(app);
+            prepareEnvironment();
+        }
+    
+    scalePartition(factor: Int)
+        Scaling {
+            adjustResources(factor);
+            validateScaling();
+        }
+    
+    stop()
+        Cleanup {
+            stopServices();
+            unmountOverlay();
+        }
+    
+    acceptWorkorder(workorderId: String)
+        Ready {
+            acknowledgeWorkorder(workorderId);
+        }
+}
+
+Deploying {
+    deploymentComplete()
+        Running {
+            startApplication();
+            beginHealthMonitoring();
+        }
+    
+    deploymentFailed(error: String)
+        Error {
+            handleError(error);
+            rollbackDeployment();
+        }
+}
+
+Running {
+    updateApplication(app: String)
+        Updating {
+            startUpdate(app);
+            backupCurrentState();
+        }
+    
+    stop()
+        Stopping {
+            gracefulShutdown();
+        }
+    
+    applicationCrashed(error: String)
+        Error {
+            handleError(error);
+            attemptRecovery();
+        }
+    
+    executeWorkorder(workorder: String)
+        Running {
+            processWorkorder(workorder);
+            reportProgress();
+        }
+}
+
+Updating {
+    updateComplete()
+        Running {
+            restartApplication();
+            verifyUpdate();
+        }
+    
+    updateFailed(error: String)
+        Running {
+            rollbackUpdate();
+            restoreBackup();
+        }
+}
+
+Scaling {
+    scalingComplete()
+        Ready {
+            updateCapacity();
+            notifyResourceChange();
+        }
+    
+    scalingFailed(error: String)
+        Ready {
+            revertScaling();
+            logScalingFailure();
+        }
+}
+
+Stopping {
+    stopped()
+        Cleanup {
+            cleanupApplication();
+        }
+}
+
+Cleanup {
+    cleanupComplete()
+        Idle {
+            resetState();
+            releaseResources();
+        }
+    
+    cleanupFailed(error: String)
+        Error {
+            forceCleanup();
+        }
+}
+
+Error {
+    retry()
+        Idle {
+            resetErrorState();
+            logRecovery();
+        }
+    
+    abort()
+        [*] {
+            emergencyShutdown();
+            logAbort();
+        }
+}
+
+%%
