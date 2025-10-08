@@ -18,7 +18,6 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 log_info() {
@@ -775,7 +774,6 @@ Integrates Model Context Protocol with SMC-generated FSMs
 """
 
 import json
-import subprocess
 import asyncio
 import logging
 from typing import Dict, Any, Optional
