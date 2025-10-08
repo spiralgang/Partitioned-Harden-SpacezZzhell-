@@ -53,13 +53,19 @@ check_requirements() {
     fi
     
     # Check Java version
-    java_version=$(java -version 2>&1 | head -1 | cut -d'"' -f2 | cut -d'.' -f1)
-    if [ "$java_version" -lt 8 ]; then
-        log_error "Java 8 or higher required (found Java $java_version)"
+    # Robust Java version parsing for both old (1.8.0_xx) and new (11.0.1) formats
+    java_version_str=$(java -version 2>&1 | head -1 | cut -d'"' -f2)
+    if [[ "$java_version_str" == 1.* ]]; then
+        java_major_version=$(echo "$java_version_str" | cut -d'.' -f2)
+    else
+        java_major_version=$(echo "$java_version_str" | cut -d'.' -f1)
+    fi
+    if [ "$java_major_version" -lt 8 ]; then
+        log_error "Java 8 or higher required (found Java $java_version_str)"
         return 1
     fi
     
-    log_success "Java $java_version detected - compatible with SMC"
+    log_success "Java $java_version_str detected - compatible with SMC"
     
     # Check for other required tools
     local missing_tools=()
