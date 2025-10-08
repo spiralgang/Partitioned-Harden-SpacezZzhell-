@@ -51,7 +51,8 @@ generate_setup_prompts() {
     
     log_info "Generating setup workflow prompts for $device_model..."
     
-    cat > "$PROMPTS_DIR/setup_${device_model,,}_${purpose}.md" << EOF
+    local device_model_lc="$(echo "$device_model" | tr '[:upper:]' '[:lower:]')"
+    cat > "$PROMPTS_DIR/setup_${device_model_lc}_${purpose}.md" << EOF
 # Setup Workflow Prompts: $device_model for $purpose
 
 ## Device Identification Prompt
