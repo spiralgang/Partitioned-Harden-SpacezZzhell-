@@ -134,7 +134,7 @@ case "$1" in
     time_start=$(date +%s.%N)
     proot -r "$SYSTEM_IMG" -b /dev -b /proc -b /sys -w / /system/bin/sh -c "echo 'Benchmark test'; ls /system/bin | wc -l"
     time_end=$(date +%s.%N)
-    echo "Execution time: $(echo "$time_end - $time_start" | bc)s"
+    echo "Execution time: $(awk "BEGIN {print $time_end - $time_start}")s"
     ;;
   *) echo "Usage: $0 {setup|start|exec|status|benchmark} [command]" ;;
 esac
