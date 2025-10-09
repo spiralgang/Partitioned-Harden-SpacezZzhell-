@@ -113,5 +113,28 @@ case "$1" in
   setup) shift; setup "$1" ;;
   start) start ;;
   exec)  shift; proot -r "$SYSTEM_IMG" -b /dev -b /proc -b /sys -w / /system/bin/sh -c "$*" ;;
-  *) echo "Usage: $0 {setup|start|exec command}" ;;
+  status) 
+    echo "=== ZShell Partition Status ==="
+    if [ -f "$SYSTEM_IMG" ]; then
+      echo "System Image: Available ($(du -h "$SYSTEM_IMG" | cut -f1))"
+    else
+      echo "System Image: Not found"
+    fi
+    if pgrep -f "proot.*$SYSTEM_IMG" >/dev/null; then
+      echo "Status: Running (PID: $(pgrep -f "proot.*$SYSTEM_IMG"))"
+    else
+      echo "Status: Stopped"
+    fi
+    if [ -d "$OVERLAY_DIR" ]; then
+      echo "Overlay Size: $(du -sh "$OVERLAY_DIR" | cut -f1)"
+    fi
+    ;;
+  benchmark)
+    echo "Running partition performance benchmark..."
+    time_start=$(date +%s.%N)
+    proot -r "$SYSTEM_IMG" -b /dev -b /proc -b /sys -w / /system/bin/sh -c "echo 'Benchmark test'; ls /system/bin | wc -l"
+    time_end=$(date +%s.%N)
+    echo "Execution time: $(awk "BEGIN {print $time_end - $time_start}")s"
+    ;;
+  *) echo "Usage: $0 {setup|start|exec|status|benchmark} [command]" ;;
 esac

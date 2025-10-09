@@ -1,0 +1,171 @@
+// WorkorderProcessor.sm - Generated from Mermaid workorder pipeline
+%class WorkorderProcessor
+%header WorkorderProcessor.h
+%start Idle
+%map WorkorderProcessorMap
+%%
+
+Idle {
+    createWorkorder(request: String)
+        Validating {
+            validateRequest(request);
+        }
+}
+
+Validating {
+    requestValid()
+        AssigningBot {
+            findAvailableBot();
+        }
+    
+    requestInvalid(reason: String)
+        Rejected {
+            rejectRequest(reason);
+            logRejection();
+        }
+}
+
+AssigningBot {
+    botAssigned(botId: String)
+        WaitingAcceptance {
+            notifyBot(botId);
+            startTimeout();
+        }
+    
+    noBotAvailable()
+        Queued {
+            addToQueue();
+            scheduleRetry();
+        }
+}
+
+WaitingAcceptance {
+    botAccepted()
+        Executing {
+            startExecution();
+            beginMonitoring();
+        }
+    
+    botRejected(reason: String)
+        AssigningBot {
+            logRejection(reason);
+            findAlternativeBot();
+        }
+    
+    acceptanceTimeout()
+        AssigningBot {
+            handleTimeout();
+            reassignBot();
+        }
+}
+
+Queued {
+    botBecameAvailable()
+        AssigningBot {
+            assignToBot();
+        }
+    
+    queueTimeout()
+        Failed {
+            markFailed("Queue timeout");
+        }
+    
+    cancel()
+        Cancelled {
+            removeFromQueue();
+        }
+}
+
+Executing {
+    progressUpdate(percent: Int)
+        Executing {
+            updateProgress(percent);
+            notifyProgress();
+        }
+    
+    executionComplete(results: String)
+        Completed {
+            processResults(results);
+            notifyCompletion();
+        }
+    
+    executionFailed(error: String)
+        HandleFailure {
+            analyzeFailure(error);
+        }
+    
+    executionTimeout()
+        HandleFailure {
+            handleExecutionTimeout();
+        }
+    
+    pause()
+        Paused {
+            pauseExecution();
+        }
+}
+
+Paused {
+    resume()
+        Executing {
+            resumeExecution();
+        }
+    
+    cancel()
+        Cancelled {
+            cancelExecution();
+        }
+}
+
+HandleFailure {
+    retryDecision()
+        [canRetry()]
+        AssigningBot {
+            incrementRetryCount();
+            logRetryAttempt();
+        }
+    
+    retryDecision()
+        [!canRetry()]
+        Failed {
+            markFinalFailure();
+        }
+}
+
+Completed {
+    archive()
+        Archived {
+            moveToArchive();
+            cleanupResources();
+        }
+}
+
+Failed {
+    archive()
+        Archived {
+            moveToArchive();
+            logFailure();
+        }
+}
+
+Cancelled {
+    archive()
+        Archived {
+            moveToArchive();
+            logCancellation();
+        }
+}
+
+Rejected {
+    archive()
+        Archived {
+            moveToArchive();
+            logRejection();
+        }
+}
+
+Archived {
+    // Terminal state - no transitions
+}
+
+%%
