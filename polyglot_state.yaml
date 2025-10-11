@@ -38,4 +38,8 @@ SASC_AGENT_MANIFEST:
     - Ubuntu_Proot
     - Fedora_Unshare
     - Bwrap_Sandbox
+  NATIVE_AGENT_CONFIG:
+    log_file: demo_thought_log.txt
+    model_path: /system/etc/tflite_models/default_model.tflite
+    log_level: INFO
   SESSION_LOG: []
