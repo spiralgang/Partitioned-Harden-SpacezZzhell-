@@ -1,2 +1,0 @@
-2025-10-11 13:02:36,419 - THOUGHT: Decoding image at path '/path/to/simulated/image.png'.
-2025-10-11 13:02:36,419 - THOUGHT: Running inference with model '/system/etc/tflite_models/default_model.tflite'.
