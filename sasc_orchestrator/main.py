@@ -2,6 +2,8 @@ import logging
 import subprocess
 import vertexai
 from vertexai.generative_models import GenerativeModel
+import yaml
+from pathlib import Path
 
 # --- Configuration ---
 # IMPORTANT: You must replace these with your actual project details.
@@ -10,9 +12,11 @@ GCP_LOCATION = "us-central1"
 GEMMA_MODEL_NAME = "gemma-2b"
 
 class SascOrchestrator:
-    def __init__(self):
+    def __init__(self, host_config):
+        self.host_config = host_config
         self.logger = self._setup_logger()
         self._initialize_vertex_ai()
+        self.logger.info(f"THOUGHT: Orchestrator initialized on host: {self.host_config.get('DEVICE')}")
 
     def _setup_logger(self):
         logger = logging.getLogger("OrchestratorThoughtLogger")
@@ -129,5 +133,19 @@ def sort_and_filter(data, filter_threshold=10):
         print("")
 
 if __name__ == "__main__":
-    orchestrator = SascOrchestrator()
+    manifest_path = Path("polyglot_state.yaml")
+    if not manifest_path.exists():
+        print(f"Manifest file not found at: {manifest_path}")
+        print("Please run `sascctl init` first.")
+        exit(1)
+
+    with open(manifest_path, "r") as f:
+        scm = yaml.safe_load(f)
+
+    host_config = scm.get("SASC_AGENT_MANIFEST", {}).get("AARCH64_HOST_CONFIG")
+    if not host_config:
+        print("AARCH64_HOST_CONFIG not found in manifest.")
+        exit(1)
+
+    orchestrator = SascOrchestrator(host_config)
     orchestrator.run()

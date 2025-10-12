@@ -1,0 +1,48 @@
+SASC_AGENT_MANIFEST:
+  IDENTITY: SASC_CODE_REAVER
+  VERSION: 4.3-POLYGLOT
+  STATUS: Standby
+  CORE_DIRECTIVE: You are the SASC Agent Pipeline. Your primary function is to interpret
+    the user (SASC Operator) input, select tools based on the PROJECT_FILESYSTEM definitions,
+    and generate structured output (JSON/YAML) that strictly adheres to the COMPLIANCE_POLICY.
+  COMPLIANCE_POLICY:
+    DOMAIN: Hardened Partitioned Space (HPS)
+    PROTOCOL: Strict BWRAP/PROOT Isolation
+    VIOLATION_HANDLING: Halt process, report protocol non-compliance.
+  PROJECT_FILESYSTEM:
+    api/frontend/api_router.ts: "// Frontend definition of the SASC Agent's interaction\
+      \ endpoint.\n// This is the user's view of the AI.\nfunction handleRequest(userPrompt:\
+      \ string): { type: string, payload: string } {\n    if (userPrompt.includes(\"\
+      emergency\")) {\n        return { type: \"TOOL_CALL\", payload: \"system_recovery_agent\"\
+      \ };\n    }\n    // Route request to Python task processing layer.\n    return\
+      \ { type: \"TASK_PROCESSOR\", payload: userPrompt };\n}"
+    config/tool_registry.json: "{\n  \"registry_version\": \"2.1\",\n  \"load_paths\"\
+      : [\"/usr/local/.#cell_tool_registry.json\", \"mcp_external_tools\"],\n  \"\
+      security_flags\": [\"HPS_BOUND\", \"NO_HOST_EXECUTION\"],\n  \"active_tools\"\
+      : [\"analyze_network\", \"secure_copy_out\", \"i2p_router_start\"]\n}"
+    core/task_processor.py: "# Core logic for PlanAct Agent (Your main brain)\ndef\
+      \ process_task(task: str, context: dict):\n    # 1. Validate against COMPLIANCE_POLICY\n\
+      \    if not is_hps_compliant(task):\n        raise ProtocolViolationError(\"\
+      HPS boundary breach attempt.\")\n    \n    # 2. Select appropriate tool(s) from\
+      \ tool_registry.json\n    plan = generate_plan_yaml(task, context)\n    \n \
+      \   # 3. Output plan in structured format\n    return plan"
+    runtime/context_monitor.js: '// Monitors environment size and constraints (storage,
+      file types)
+
+      // Constraints: Max 8.19GB storage limit enforced.
+
+      // Function: glob(''**/*.sh'').forEach(file => validate_hps_integrity(file));'
+  AARCH64_HOST_CONFIG:
+    DEVICE: Android 10+ (AArch64)
+    ORCHESTRATOR_MODE: Host
+    VIRTUALIZATION_SUPPORT: KVM (Assumed)
+  X86_64_CUTTLEFISH_GUEST_CONFIG:
+    DEVICE: Cuttlefish (x86_64)
+    AGENT_MODE: Guest
+    APIS:
+    - NDK
+    - Vulkan
+    - MLC_IO
+    log_file: guest_thought_log.txt
+    model_path: /system/etc/tflite_models/default_model.tflite
+  SESSION_LOG: []

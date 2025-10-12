@@ -7,11 +7,14 @@ class SimulatedNativeAgent:
     def __init__(self, config):
         self.config = config
         self.logger = self._setup_logger()
+        self.logger.info(f"THOUGHT: (Guest) Initializing on virtual device: {self.config.get('DEVICE')}")
+        self.logger.info(f"THOUGHT: (Guest) APIs available: {self.config.get('APIS')}")
 
     def _setup_logger(self):
-        logger = logging.getLogger("ThoughtCloningLogger")
+        log_file = self.config.get("log_file", "guest_thought_log.txt")
+        logger = logging.getLogger("GuestThoughtCloningLogger")
         logger.setLevel(logging.INFO)
-        handler = logging.FileHandler(self.config.get("log_file", "thought_log.txt"))
+        handler = logging.FileHandler(log_file)
         formatter = logging.Formatter('%(asctime)s - %(message)s')
         handler.setFormatter(formatter)
         logger.addHandler(handler)
