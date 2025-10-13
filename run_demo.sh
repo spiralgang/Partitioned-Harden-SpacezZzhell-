@@ -19,6 +19,8 @@ if ! command -v yq >/dev/null 2>&1; then
     exit 1
 fi
 yq -i '.log_file = "demo_thought_log.txt"' polyglot_state.yaml
+# Using sed to change the log_file path in the manifest
+sed -i 's/thought_log.txt/demo_thought_log.txt/' polyglot_state.yaml
 
 # 3. Launch the agent with the modified SCM
 echo "--- Launching Agent ---"

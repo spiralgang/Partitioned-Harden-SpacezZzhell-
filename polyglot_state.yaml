@@ -42,4 +42,17 @@ SASC_AGENT_MANIFEST:
     log_file: demo_thought_log.txt
     model_path: /system/etc/tflite_models/default_model.tflite
     log_level: INFO
+  AARCH64_HOST_CONFIG:
+    DEVICE: Android 10+ (AArch64)
+    ORCHESTRATOR_MODE: Host
+    VIRTUALIZATION_SUPPORT: KVM (Assumed)
+  X86_64_CUTTLEFISH_GUEST_CONFIG:
+    DEVICE: Cuttlefish (x86_64)
+    AGENT_MODE: Guest
+    APIS:
+    - NDK
+    - Vulkan
+    - MLC_IO
+    log_file: guest_thought_log.txt
+    model_path: /system/etc/tflite_models/default_model.tflite
   SESSION_LOG: []

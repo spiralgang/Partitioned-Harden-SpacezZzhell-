@@ -59,6 +59,17 @@ def process_task(task: str, context: dict):
             "log_file": "thought_log.txt",
             "model_path": "/system/etc/tflite_models/default_model.tflite",
             "log_level": "INFO"
+        "AARCH64_HOST_CONFIG": {
+            "DEVICE": "Android 10+ (AArch64)",
+            "ORCHESTRATOR_MODE": "Host",
+            "VIRTUALIZATION_SUPPORT": "KVM (Assumed)",
+        },
+        "X86_64_CUTTLEFISH_GUEST_CONFIG": {
+            "DEVICE": "Cuttlefish (x86_64)",
+            "AGENT_MODE": "Guest",
+            "APIS": ["NDK", "Vulkan", "MLC_IO"],
+            "log_file": "guest_thought_log.txt",
+            "model_path": "/system/etc/tflite_models/default_model.tflite",
         },
         "SESSION_LOG": [],
     }
@@ -181,6 +192,7 @@ def launch_agent(
 ):
     """
     Launches the simulated native agent with the configuration from the SCM.
+    Launches the simulated native agent with the guest configuration from the SCM.
     """
     if not manifest.exists():
         print(f"Manifest file not found at: {manifest}")
@@ -202,6 +214,19 @@ def launch_agent(
     print("🚀 Launching simulated native agent...")
     subprocess.run(["python", "sasc_agent/native_agent_simulator.py", str(agent_config_path)])
     print("✅ Agent execution finished.")
+    guest_config = scm.get("SASC_AGENT_MANIFEST", {}).get("X86_64_CUTTLEFISH_GUEST_CONFIG")
+    if not guest_config:
+        print("X86_64_CUTTLEFISH_GUEST_CONFIG not found in manifest.")
+        raise typer.Exit(code=1)
+
+    # Save the guest config to a temporary file to be read by the agent
+    agent_config_path = Path("guest_config.json")
+    with open(agent_config_path, "w") as f:
+        json.dump(guest_config, f)
+
+    print("🚀 Launching simulated guest agent in Cuttlefish environment...")
+    subprocess.run(["python", "sasc_agent/native_agent_simulator.py", str(agent_config_path)])
+    print("✅ Guest agent execution finished.")
 
 
 if __name__ == "__main__":
