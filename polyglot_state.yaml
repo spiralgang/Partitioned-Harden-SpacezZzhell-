@@ -32,6 +32,16 @@ SASC_AGENT_MANIFEST:
       // Constraints: Max 8.19GB storage limit enforced.
 
       // Function: glob(''**/*.sh'').forEach(file => validate_hps_integrity(file));'
+  OPERATIONAL_CONTEXT:
+    DEVICE: Samsung Galaxy S9+ (SM-G965U1)
+    ISOLATION_LAYERS:
+    - Ubuntu_Proot
+    - Fedora_Unshare
+    - Bwrap_Sandbox
+  NATIVE_AGENT_CONFIG:
+    log_file: demo_thought_log.txt
+    model_path: /system/etc/tflite_models/default_model.tflite
+    log_level: INFO
   AARCH64_HOST_CONFIG:
     DEVICE: Android 10+ (AArch64)
     ORCHESTRATOR_MODE: Host

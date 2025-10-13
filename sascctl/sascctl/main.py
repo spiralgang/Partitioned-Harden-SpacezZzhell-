@@ -51,6 +51,14 @@ def process_task(task: str, context: dict):
 // Constraints: Max 8.19GB storage limit enforced.
 // Function: glob('**/*.sh').forEach(file => validate_hps_integrity(file));""",
         },
+        "OPERATIONAL_CONTEXT": {
+            "DEVICE": "Samsung Galaxy S9+ (SM-G965U1)",
+            "ISOLATION_LAYERS": ["Ubuntu_Proot", "Fedora_Unshare", "Bwrap_Sandbox"],
+        },
+        "NATIVE_AGENT_CONFIG": {
+            "log_file": "thought_log.txt",
+            "model_path": "/system/etc/tflite_models/default_model.tflite",
+            "log_level": "INFO"
         "AARCH64_HOST_CONFIG": {
             "DEVICE": "Android 10+ (AArch64)",
             "ORCHESTRATOR_MODE": "Host",
@@ -183,6 +191,7 @@ def launch_agent(
     manifest: Path = typer.Option(DEFAULT_MANIFEST_PATH, "--file", "-f", help="The path to the manifest file."),
 ):
     """
+    Launches the simulated native agent with the configuration from the SCM.
     Launches the simulated native agent with the guest configuration from the SCM.
     """
     if not manifest.exists():
@@ -192,6 +201,19 @@ def launch_agent(
     with open(manifest, "r") as f:
         scm = yaml.safe_load(f)
 
+    agent_config = scm.get("SASC_AGENT_MANIFEST", {}).get("NATIVE_AGENT_CONFIG")
+    if not agent_config:
+        print("NATIVE_AGENT_CONFIG not found in manifest.")
+        raise typer.Exit(code=1)
+
+    # Save the config to a temporary file to be read by the agent
+    agent_config_path = Path("agent_config.json")
+    with open(agent_config_path, "w") as f:
+        json.dump(agent_config, f)
+
+    print("🚀 Launching simulated native agent...")
+    subprocess.run(["python", "sasc_agent/native_agent_simulator.py", str(agent_config_path)])
+    print("✅ Agent execution finished.")
     guest_config = scm.get("SASC_AGENT_MANIFEST", {}).get("X86_64_CUTTLEFISH_GUEST_CONFIG")
     if not guest_config:
         print("X86_64_CUTTLEFISH_GUEST_CONFIG not found in manifest.")
