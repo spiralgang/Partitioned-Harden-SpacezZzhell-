@@ -1,0 +1,51 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.superlab.quantumide'
+    compileSdkVersion 34
+    buildToolsVersion "34.0.0"
+
+    defaultConfig {
+        applicationId "com.superlab.quantumide"
+        minSdkVersion 24
+        targetSdkVersion 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    // This is the bridge: include the entire web-terminal directory in the APK's assets.
+    sourceSets {
+        main {
+            assets.srcDirs = ['../web-terminal']
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    // This is the critical "bridge" to run the Node.js server on the device.
+    packagingOptions {
+        pickFirst 'lib/armeabi-v7a/libnode.so'
+        pickFirst 'lib/arm64-v8a/libnode.so'
+        pickFirst 'lib/x86/libnode.so'
+        pickFirst 'lib/x86_64/libnode.so'
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.webkit:webkit:1.10.0'
+    // The Node.js mobile runtime
+    implementation 'com.janeasystems:nodejs-mobile-android:0.4.0'
+}

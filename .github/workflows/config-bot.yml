@@ -1,0 +1,35 @@
+name: Align Android Config Bot
+
+on:
+  push:
+    branches:
+      - main # Or your primary branch
+
+jobs:
+  align:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Alignment Script
+        run: ./align_android_config.sh
+
+      - name: Download and Extract Gradle Wrapper JAR
+        run: |
+          mkdir -p gradle/wrapper
+          curl -L -o gradle-dist.zip https://services.gradle.org/distributions/gradle-8.2-bin.zip
+          unzip -p gradle-dist.zip gradle-8.2/lib/gradle-wrapper-8.2.jar > gradle/wrapper/gradle-wrapper.jar
+          rm gradle-dist.zip
+
+      - name: Auto-commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: Align Android configuration"
+          branch: ${{ github.ref_name }}
+          commit_options: '--no-verify'
+          file_pattern: 'build.gradle settings.gradle app/build.gradle gradlew gradlew.bat gradle/wrapper/gradle-wrapper.properties src/**'
+          repository: .
+          commit_user_name: Config Bot
+          commit_user_email: bot@superlab.com
+          commit_author: Config Bot <bot@superlab.com>
