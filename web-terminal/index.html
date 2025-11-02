@@ -9,10 +9,25 @@
     <script>
       const term = new Terminal({ cursorBlink: true });
       term.open(document.getElementById("terminal"));
-      const socket = new WebSocket("ws://localhost:3000/terminal");
 
-      socket.onmessage = (e) => term.write(e.data);
-      term.onData((d) => socket.send(d));
+      function connectToTerminal(url) {
+        term.writeln(`Connecting to ${url}...`);
+        const socket = new WebSocket(url);
+
+        socket.onopen = () => {
+          term.writeln("Connection established.");
+        };
+
+        socket.onmessage = (e) => term.write(e.data);
+        socket.onerror = (err) => {
+            term.writeln(`Connection error: ${err.message}`);
+        };
+        socket.onclose = () => {
+            term.writeln("Connection closed.");
+        };
+
+        term.onData((d) => socket.send(d));
+      }
     </script>
   </body>
 </html>

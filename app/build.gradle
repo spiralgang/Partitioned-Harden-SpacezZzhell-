@@ -34,7 +34,6 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    // This is the critical "bridge" to run the Node.js server on the device.
     packagingOptions {
         pickFirst 'lib/armeabi-v7a/libnode.so'
         pickFirst 'lib/arm64-v8a/libnode.so'
@@ -46,6 +45,5 @@ android {
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.webkit:webkit:1.10.0'
-    // The Node.js mobile runtime
     implementation 'com.janeasystems:nodejs-mobile-android:0.4.0'
 }

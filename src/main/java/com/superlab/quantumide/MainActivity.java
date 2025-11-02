@@ -2,13 +2,18 @@ package com.superlab.quantumide;
 
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.Button;
+import android.widget.EditText;
 import com.janeasystems.cdv.nodejsmobile.NodeJS;
 
 public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
+    private EditText urlInput;
+    private Button connectButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -16,19 +21,29 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         webView = findViewById(R.id.webview);
+        urlInput = findViewById(R.id.url_input);
+        connectButton = findViewById(R.id.connect_button);
+
         WebSettings webSettings = webView.getSettings();
-
-        // Enable JavaScript, which is crucial for our terminal and its dependencies.
         webSettings.setJavaScriptEnabled(true);
-
-        // Enable DOM Storage API, needed for some libraries.
         webSettings.setDomStorageEnabled(true);
 
-        // Start the Node.js server in a background thread.
+        // Start the embedded Node.js server in a background thread.
         startNodeJS();
 
-        // Load the local HTML file that will connect to the Node.js server.
+        // Load the local HTML file that contains the terminal UI.
         webView.loadUrl("file:///android_asset/index.html");
+
+        connectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String url = urlInput.getText().toString();
+                if (url != null && !url.isEmpty()) {
+                    // Call the JavaScript function inside the WebView to connect the terminal.
+                    webView.evaluateJavascript("connectToTerminal('" + url + "')", null);
+                }
+            }
+        });
     }
 
     private void startNodeJS() {
