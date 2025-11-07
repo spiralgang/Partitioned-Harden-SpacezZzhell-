@@ -2,6 +2,7 @@ name: 🔥 Forge SpacezZzhell with Function Calling 🔥
 on: 
   push:  # Trigger on push—manual sync
   workflow_dispatch:  # Manual launch to bypass app limits
+
 jobs:
   setup:  # Job name: Wire up Function Calling
     name: 💪 Integrate xAI Tools into SpacezZzhell 💪
@@ -19,24 +20,21 @@ jobs:
           python-version: '3.11'  # Match xAI SDK requirements
 
       - name: 📦 Install Dependencies
-        run: /.github.com/workflows/xai.yml
+        run: |
           python -m pip install --upgrade pip
-          pip install xai-sdk pydantic  # Install xAI SDK and Pydantic
+          pip install xai-sdk pydantic requests  # Install xAI SDK and Pydantic
         env:
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}  # Secure API key
 
       - name: 🛠️ Initialize Function Calling Setup
-        run: /.github/workflows/xai.yml
+        run: |
           mkdir -p spacezzzhell/functions
-          echo "#!/usr/bin/env python3" > spacezzzhell/functions/tool_handler.py
-          cat << 'EOF' >> spacezzzhell/functions/tool_handler.py
+          cat > spacezzzhell/functions/tool_handler.py << 'EOF'
+#!/usr/bin/env python3
+import os
+import json
 from typing import Literal
 from pydantic import BaseModel, Field
-from xai_sdk import Client, tool, tool_result, user
-
-# API Client Setup
-client = Client(api_key=os.getenv('XAI_API_KEY'))
-chat = client.chat.create(model="grok-4")
 
 # Define Tool Functions
 class TemperatureRequest(BaseModel):
@@ -53,32 +51,13 @@ def get_current_temperature(request: TemperatureRequest):
 def get_current_ceiling(request: CeilingRequest):
     return {"location": request.location, "ceiling": 15000, "ceiling_type": "broken", "unit": "ft"}
 
-# Tool Definitions
-tool_definitions = [
-    tool(name="get_current_temperature", description="Get the current temperature", parameters=TemperatureRequest.model_json_schema()),
-    tool(name="get_current_ceiling", description="Get the current cloud ceiling", parameters=CeilingRequest.model_json_schema()),
-]
-
-# Function Mapping
-tools_map = {"get_current_temperature": get_current_temperature, "get_current_ceiling": get_current_ceiling}
-
-# Initial Request
-chat = client.chat.create(model="grok-4", tools=tool_definitions, tool_choice="auto")
-chat.append(user("What's the temperature like in San Francisco?"))
-response = chat.sample()
-
-# Handle Tool Calls
-if response.tool_calls:
-    for tool_call in response.tool_calls:
-        function_name = tool_call.function.name
-        function_args = json.loads(tool_call.function.arguments)
-        result = tools_map[function_name](**function_args)
-        chat.append(tool_result(result))
-
-# Save Response
-with open("spacezzzhell/functions/response.json", "w") as f:
-    json.dump(response.content, f) if hasattr(response, 'content') else json.dump({"status": "pending"}, f)
-          EOF
+# Example usage
+if __name__ == "__main__":
+    print("Function calling setup for SpacezZzhell!")
+    temp_request = TemperatureRequest(location="San Francisco, CA", unit="fahrenheit")
+    result = get_current_temperature(temp_request)
+    print(f"Temperature result: {result}")
+EOF
           chmod +x spacezzzhell/functions/tool_handler.py
 
       - name: 🎉 Confirm Setup
