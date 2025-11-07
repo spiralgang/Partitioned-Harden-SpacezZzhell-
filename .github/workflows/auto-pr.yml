@@ -1,0 +1,26 @@
+name: Auto-PR Creation and Multi-AI Review
+
+on:
+  push:
+    branches:
+      - partitioned-main
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'Auto PR: Review changes from partitioned-main'
+          title: 'Review: Changes from partitioned-main'
+          body: 'Automatic PR to review changes pushed to partitioned-main branch'
+          branch: auto-pr-${{ github.sha }}
+          base: partitioned-main
+          author: 'AI Review System <ai@review.system>'
+          assignees: spiralgang
+          reviewers: spiralgang

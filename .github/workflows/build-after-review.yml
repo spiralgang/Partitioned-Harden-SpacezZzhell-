@@ -1,0 +1,72 @@
+name: Build and Test After AI Review
+
+on:
+  pull_request:
+    branches:
+      - partitioned-main
+    types: [closed]  # Only run when PR is merged/closed
+    paths:
+      - '**/*.java'
+      - '**/*.xml'
+      - '**/*.gradle'
+      - '**/src/**'
+      - '**/app/**'
+
+jobs:
+  build-and-test:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: tools platform-tools build-tools-34.0.0
+          ndk: '25.1.8937393'
+
+      - name: Install Frontend Dependencies
+        run: |
+          if [ -d "web-terminal" ]; then
+            cd web-terminal
+            npm install
+            cd ..
+          fi
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v2
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Run Tests
+        run: ./gradlew testDebug
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
