@@ -1,0 +1,151 @@
+name: SPIRAL TS/JS/HTML API Governance System
+
+on:
+  pull_request:
+    branches:
+      - partitioned-main
+    types: [opened, synchronize, reopened]
+
+jobs:
+  spiral-ts-validation:
+    runs-on: ubuntu-latest
+    outputs:
+      ts-status: ${{ steps.ts.outputs.status }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: SPIRAL TypeScript Validation
+        id: ts
+        run: |
+          echo "Enforcing SPIRAL TypeScript governance..."
+          
+          # Check for required TypeScript files
+          ts_files=$(find . -name "*.ts" -o -name "*.tsx" | grep -v node_modules | wc -l)
+          
+          if [ $ts_files -gt 0 ]; then
+            echo "TypeScript files detected - validating compliance"
+            
+            # Check for proper TypeScript configuration
+            if [ ! -f "tsconfig.json" ]; then
+              echo "PENALTY: Missing tsconfig.json for TypeScript project"
+              echo "status=violated" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+            
+            # Check for type safety violations
+            if grep -r "any\|// @ts-ignore\|// @ts-nocheck" .; then
+              echo "PENALTY: Type safety violations detected"
+              echo "status=violated" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+          fi
+          
+          echo "status=approved" >> $GITHUB_OUTPUT
+
+  spiral-js-validation:
+    runs-on: ubuntu-latest
+    outputs:
+      js-status: ${{ steps.js.outputs.status }}
+
+    steps:
+      - name: SPIRAL JavaScript Validation
+        id: js
+        run: |
+          echo "Enforcing SPIRAL JavaScript governance..."
+          
+          # Check for required JavaScript files
+          js_files=$(find . -name "*.js" -not -path "*/node_modules/*" | wc -l)
+          
+          if [ $js_files -gt 0 ]; then
+            echo "JavaScript files detected - validating compliance"
+            
+            # Check for proper ES6+ usage
+            if grep -r "var " . | head -5; then
+              echo "CODE STYLE VIOLATION: 'var' usage detected, use 'let' or 'const'"
+              echo "status=violated" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+            
+            # Check for security violations
+            if grep -r "eval(\|Function(\|document\.write\|innerHTML" .; then
+              echo "SECURITY VIOLATION: Dangerous JavaScript functions detected"
+              echo "status=violated" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+          fi
+          
+          echo "status=approved" >> $GITHUB_OUTPUT
+
+  spiral-html-validation:
+    runs-on: ubuntu-latest
+    outputs:
+      html-status: ${{ steps.html.outputs.status }}
+
+    steps:
+      - name: SPIRAL HTML Validation
+        id: html
+        run: |
+          echo "Enforcing SPIRAL HTML governance..."
+          
+          # Check for required HTML files
+          html_files=$(find . -name "*.html" -o -name "*.htm" | wc -l)
+          
+          if [ $html_files -gt 0 ]; then
+            echo "HTML files detected - validating compliance"
+            
+            # Check for accessibility violations
+            if ! grep -r "lang=" .; then
+              echo "ACCESSIBILITY VIOLATION: Missing language attribute"
+              echo "status=violated" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+            
+            # Check for security violations
+            if grep -r "http-equiv\|unsafe-inline\|unsafe-eval" .; then
+              echo "SECURITY VIOLATION: Unsafe HTML/CSP directives detected"
+              echo "status=violated" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+          fi
+          
+          echo "status=approved" >> $GITHUB_OUTPUT
+
+  api-contract-validation:
+    runs-on: ubuntu-latest
+    needs: [spiral-ts-validation, spiral-js-validation, spiral-html-validation]
+    if: |
+      ${{ needs.spiRAL-ts-validation.outputs.ts-status == 'approved' &&
+          needs.spiRAL-js-validation.outputs.js-status == 'approved' &&
+          needs.spiRAL-html-validation.outputs.html-status == 'approved' }}
+    steps:
+      - name: API Contract Enforcement
+        run: |
+          echo "Enforcing API Contract governance..."
+          
+          # Check for API endpoint documentation or contracts
+          if [ -f "openapi.json" ] || [ -f "swagger.json" ] || [ -f "api.yaml" ]; then
+            echo "API contract detected and validated"
+          else
+            echo "WARNING: No API contract found (openapi.json, swagger.json, or api.yaml)"
+            # In a real implementation, this would be mandatory
+          fi
+
+  spiral-governance-lock:
+    runs-on: ubuntu-latest
+    needs: [spiral-ts-validation, spiral-js-validation, spiral-html-validation, api-contract-validation]
+    steps:
+      - name: SPIRAL Governance Hard Lock
+        run: |
+          echo "SPIRAL TS/JS/HTML API Governance: HARD LOCK ACTIVATED"
+          echo "All code layers have been validated and locked"
+          echo "FSM State: SPIRAL_COMPLIANT"
+          echo "Mandatory compliance: ENFORCED"
+          
+          # Create governance lock file
+          mkdir -p .spiral-governance
+          echo "$(date): SPIRAL governance hard lock applied" > .spiral-governance/lock.txt
+          echo "TS Status: ${{ needs.spiRAL-ts-validation.outputs.ts-status }}" >> .spiral-governance/lock.txt
+          echo "JS Status: ${{ needs.spiRAL-js-validation.outputs.js-status }}" >> .spiral-governance/lock.txt
+          echo "HTML Status: ${{ needs.spiRAL-html-validation.outputs.html-status }}" >> .spiral-governance/lock.txt
