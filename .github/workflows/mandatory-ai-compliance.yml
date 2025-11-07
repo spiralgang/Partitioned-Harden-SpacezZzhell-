@@ -1,0 +1,87 @@
+name: Mandatory AI Compliance with FSM Enforcement
+
+on:
+  pull_request:
+    branches:
+      - partitioned-main
+    types: [opened, synchronize, reopened]
+
+jobs:
+  mandatory-fsm-compliance:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        check-type: [security, architecture, quality, efficiency]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Mandatory ${{ matrix.check-type }} Compliance Check
+        run: |
+          echo "Enforcing mandatory ${{ matrix.check-type }} compliance..."
+          
+          case "${{ matrix.check-type }}" in
+            "security")
+              # Hard security requirements
+              if ! grep -q "uses-permission" src/main/AndroidManifest.xml; then
+                echo "ERROR: No permissions found - mandatory security requirement"
+                exit 1
+              fi
+              ;;
+            "architecture")
+              # Hard architecture requirements
+              required_files=("src/main/AndroidManifest.xml" 
+                            "src/main/java/com/superlab/quantumide/MainActivity.java"
+                            "src/main/res/layout/activity_main.xml"
+                            "build.gradle"
+                            "settings.gradle")
+              
+              for file in "${required_files[@]}"; do
+                if [ ! -f "$file" ]; then
+                  echo "ERROR: Missing mandatory file $file"
+                  exit 1
+                fi
+              done
+              ;;
+            "quality")
+              # Hard quality requirements
+              if grep -r "TODO.*FIXME\|FIXME.*TODO" .; then
+                echo "ERROR: Found incomplete code markers - mandatory completion required"
+                exit 1
+              fi
+              ;;
+            "efficiency")
+              # Hard efficiency requirements
+              if grep -r "System.out.println\|Log.d\|console.log" . | grep -i debug; then
+                echo "ERROR: Found debug logs in production code - mandatory removal required"
+                exit 1
+              fi
+              ;;
+          esac
+          
+          echo "Mandatory ${{ matrix.check-type }} compliance: PASSED"
+
+  fsm-governance-lock:
+    runs-on: ubuntu-latest
+    needs: mandatory-fsm-compliance
+    steps:
+      - name: FSM Governance - Hard Lock Compliance
+        run: |
+          echo "FSM Governance enforcing hard lock on compliant code"
+          echo "All mandatory checks have passed - proceed to build"
+          
+          # Create a compliance lock file to prove enforcement
+          mkdir -p .compliance
+          echo "$(date) - All mandatory checks passed and enforced" > .compliance/enforcement-lock.txt
+          echo "FSM Governance: $(github.sha)" >> .compliance/enforcement-lock.txt
+
+  compliance-mandate:
+    runs-on: ubuntu-latest
+    needs: [mandatory-fsm-compliance, fsm-governance-lock]
+    steps:
+      - name: Final Compliance Mandate
+        run: |
+          echo "COMPLIANCE MANDATE: All hard boundaries have been enforced"
+          echo "No deviations from mandatory requirements allowed"
+          echo "FSM Governance: Enforced and Locked"

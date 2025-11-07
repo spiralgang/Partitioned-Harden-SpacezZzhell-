@@ -1,0 +1,135 @@
+name: Hard Boundary Enforcement for APK Build
+
+on:
+  pull_request:
+    branches:
+      - partitioned-main
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hard-boundary-checks:
+    runs-on: ubuntu-latest
+    outputs:
+      security-approved: ${{ steps.security.outputs.approved }}
+      architecture-approved: ${{ steps.architecture.outputs.approved }}
+      permissions-approved: ${{ steps.permissions.outputs.approved }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Hard Boundary - Security Check
+        id: security
+        run: |
+          echo "Enforcing security compliance..."
+          
+          # Mandatory security checks - these are absolute requirements
+          if ! grep -q "uses-permission.*INTERNET" src/main/AndroidManifest.xml; then
+            echo "ERROR: INTERNET permission is mandatory but missing"
+            echo "approved=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
+          if ! grep -q "uses-permission.*WRITE_EXTERNAL_STORAGE" src/main/AndroidManifest.xml; then
+            echo "ERROR: WRITE_EXTERNAL_STORAGE permission is mandatory but missing"
+            echo "approved=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
+          if grep -q "android:allowBackup=\"false\"" src/main/AndroidManifest.xml; then
+            echo "ERROR: allowBackup must be true for development environment"
+            echo "approved=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
+          echo "Security checks passed - hard boundaries maintained"
+          echo "approved=true" >> $GITHUB_OUTPUT
+
+      - name: Hard Boundary - Architecture Check
+        id: architecture
+        run: |
+          echo "Enforcing architecture compliance..."
+          
+          # Check for required architecture components
+          if [ ! -f "src/main/java/com/superlab/quantumide/MainActivity.java" ]; then
+            echo "ERROR: MainActivity.java is mandatory component missing"
+            echo "approved=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
+          if [ ! -d "web-terminal" ]; then
+            echo "ERROR: web-terminal directory is mandatory for hybrid app"
+            echo "approved=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
+          if [ ! -f "src/main/res/layout/activity_main.xml" ]; then
+            echo "ERROR: Main activity layout is mandatory"
+            echo "approved=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
+          echo "Architecture checks passed - hard boundaries maintained"
+          echo "approved=true" >> $GITHUB_OUTPUT
+
+      - name: Hard Boundary - Permissions Check
+        id: permissions
+        run: |
+          echo "Enforcing permissions compliance..."
+          
+          # Count minimum required permissions
+          permission_count=$(grep -c "uses-permission" src/main/AndroidManifest.xml || echo 0)
+          if [ $permission_count -lt 3 ]; then
+            echo "ERROR: Insufficient permissions - minimum 3 required"
+            echo "approved=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
+          echo "Permissions checks passed - hard boundaries maintained"
+          echo "approved=true" >> $GITHUB_OUTPUT
+
+  enforce-build-readiness:
+    runs-on: ubuntu-latest
+    needs: [hard-boundary-checks]
+    if: |
+      ${{ needs.hard-boundary-checks.outputs.security-approved == 'true' &&
+          needs.hard-boundary-checks.outputs.architecture-approved == 'true' &&
+          needs.hard-boundary-checks.outputs.permissions-approved == 'true' }}
+    steps:
+      - name: Confirm Hard Boundary Compliance
+        run: |
+          echo "ALL HARD BOUNDARIES ENFORCED AND COMPLIANT"
+          echo "Build readiness confirmed by mandatory checks"
+
+  hard-fail-on-violation:
+    runs-on: ubuntu-latest
+    if: |
+      ${{ needs.hard-boundary-checks.outputs.security-approved == 'false' ||
+          needs.hard-boundary-checks.outputs.architecture-approved == 'false' ||
+          needs.hard-boundary-checks.outputs.permissions-approved == 'false' }}
+    steps:
+      - name: Enforce Hard Compliance Failure
+        run: |
+          echo "HARD BOUNDARY VIOLATION DETECTED"
+          echo "Security approved: ${{ needs.hard-boundary-checks.outputs.security-approved }}"
+          echo "Architecture approved: ${{ needs.hard-boundary-checks.outputs.architecture-approved }}"
+          echo "Permissions approved: ${{ needs.hard-boundary-checks.outputs.permissions-approved }}"
+          echo "PR blocked by hard boundary enforcement system"
+          exit 1
+
+  fsm-state-verification:
+    runs-on: ubuntu-latest
+    needs: [hard-boundary-checks]
+    if: ${{ needs.hard-boundary-checks.outputs.security-approved == 'true' && 
+           needs.hard-boundary-checks.outputs.architecture-approved == 'true' && 
+           needs.hard-boundary-checks.outputs.permissions-approved == 'true' }}
+    steps:
+      - name: FSM Enforcement - Compliance Verified
+        run: |
+          echo "FSM State: COMPLIANT"
+          echo "Hard boundaries locked and verified"
+          echo "Permitted to proceed with build process"
