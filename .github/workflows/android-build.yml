@@ -1,14 +1,16 @@
 name: Build Android APK
 
 on:
-  workflow_run:
-    workflows: ["Align Android Config Bot"]
-    types:
-      - completed
+  push:
+    branches:
+      - partitioned-main
+  pull_request:
+    branches:
+      - partitioned-main
+  workflow_dispatch:
 
 jobs:
   build:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -21,10 +23,19 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: tools platform-tools build-tools-34.0.0
+          ndk: '25.1.8937393'
+
       - name: Install Frontend Dependencies
         run: |
-          cd web-terminal
-          npm install
+          if [ -d "web-terminal" ]; then
+            cd web-terminal
+            npm install
+            cd ..
+          fi
 
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v2
@@ -35,11 +46,20 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew build
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
 
-      - name: Upload APK
+      - name: Build Release APK
+        run: ./gradlew assembleRelease
+
+      - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
