@@ -19,8 +19,9 @@ jobs:
         run: |
           mkdir -p gradle/wrapper
           curl -L -o gradle-dist.zip https://services.gradle.org/distributions/gradle-8.2-bin.zip
-          unzip -p gradle-dist.zip gradle-8.2/lib/gradle-wrapper-8.2.jar > gradle/wrapper/gradle-wrapper.jar
-          rm gradle-dist.zip
+          unzip gradle-dist.zip
+          find . -name "gradle-wrapper.jar" -exec cp {} gradle/wrapper/gradle-wrapper.jar \;
+          rm -rf gradle-dist.zip gradle-8.2
 
       - name: Auto-commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
