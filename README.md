@@ -17,7 +17,7 @@ A mobile development environment that:                                          
 - Offers complete reproducibility and debuggability                                                                                  - Functions as a universal command bridge between incompatible technologies
 
 ## Key Components
-- Modified Termux 0.22 APK with Linux replacements
+- Linux Aarch64 , Android APK
 - Coreutils, bash, busybox, musl, and gcc integration
 - Proper platform signing for maximum permissions
 - Hardened middle-layer overlay system
